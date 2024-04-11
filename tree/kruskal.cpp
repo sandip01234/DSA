@@ -1,92 +1,86 @@
 #include <iostream>
-#include<algorithm>
+#include <algorithm>
 using namespace std;
 
-class Edge
-{
+class Edge {
 public:
     int source;
     int dest;
     int weight;
 };
 
-bool compare(Edge a, Edge b)
-{
+// Comparator function to sort edges according to their weights
+bool compare(Edge a, Edge b) {
     return a.weight < b.weight;
 }
 
-int findParent(int v, int *parent)
-{
-    if (parent[v] == v)
-    {
+// Function to find the parent of a node in the disjoint-set (union-find)
+int findParent(int v, int *parent) {
+    if (parent[v] == v) {
         return v;
     }
-    return findParent(parent[v], parent);
+    return findParent(parent[v], parent); // Path compression can be added here for optimization
 }
 
-void kruskals(Edge *input, int n, int E)
-{
-    // sorting the edges that were given by the user based on weights
-    sort(input, input + E, compare); // sorting using library function cause, why not
+// Kruskal's algorithm to find the MST of a graph
+void kruskals(Edge *input, int n, int E) {
+    sort(input, input + E, compare);
 
-    Edge *output = new Edge[n - 1]; // creation a new array of Edges to display the output
+    Edge *output = new Edge[n - 1];
+    int *parent = new int[n];
 
-    int *parent = new int[n]; // making a pointer array called parent to store iterations
-    for (int i = 0; i < n; i++)
-    {
-        parent[i] = i;
+    for (int i = 0; i < n; i++) {
+        parent[i] = i; // Each vertex is its own parent initially
     }
 
-    int counter = 0; // keeps track of number of edges added to mst
-    int i = 0;       // keeps track of iterations including the edges that were skipped due to kruskal's algorithm
+    int count = 0; // Number of edges added to the MST
+    int i = 0;     // Current edge index
 
-    while (counter != n - 1) // as a MST contains n-1 number of edges where n is number of vertices
-    {
-        Edge currEdge = input[i];
+    while (count < n - 1) {
+        Edge currentEdge = input[i];
 
-        // checking if currEdge is okay to add to MST or not
-        int sourceParent = findParent(currEdge.source, parent);
-        int destParent = findParent(currEdge.dest, parent);
+        // Finding the top-most parent of the source and destination vertices of the current edge
+        int sourceParent = findParent(currentEdge.source, parent);
+        int destParent = findParent(currentEdge.dest, parent);
 
-        if (sourceParent != destParent)
-        {
-            output[counter] = currEdge;
-            counter++;
-            parent[sourceParent] = destParent;
+        // If adding the current edge doesn't form a cycle
+        if (sourceParent != destParent) {
+            output[count] = currentEdge;
+            count++;
+            parent[sourceParent] = destParent; // Union operation
         }
         i++;
     }
-	cout<<"Final output: "<<endl;
-    for (int i = 0; i < n - 1; i++) // printing the final output
-    {
-        if (output[i].source < output[i].dest)
-        {
+
+    cout << "Final output:" << endl;
+    for (int i = 0; i < n - 1; i++) {
+        if (output[i].source < output[i].dest) {
             cout << output[i].source << "  " << output[i].dest << "  " << output[i].weight << endl;
-        }
-        else
-        {
+        } else {
             cout << output[i].dest << "  " << output[i].source << "  " << output[i].weight << endl;
         }
     }
+
+    delete[] output;
+    delete[] parent;
 }
 
-int main()
-{
+int main() {
     int n, E;
-    cout << "Enter number of vertices and edges : ";
+    cout << "Enter number of vertices and edges: ";
     cin >> n >> E;
     Edge *input = new Edge[E];
 
-    cout<<"Enter data of edges (source  destination  weight, in that order): ";
-    // taking user input of all edges
-    for (int i = 0; i < E; i++)
-    {
-        int s, d, w;
-        cin >> s >> d >> w;
-        input[i].source = s;
-        input[i].dest = d;
-        input[i].weight = w;
+    cout << "Enter data of edges (source destination weight, in that order):" << endl;
+    for (int i = 0; i < E; i++) {
+        cin >> input[i].source >> input[i].dest >> input[i].weight;
+        // Adjusting for 0-based indexing if necessary
+        input[i].source--;
+        input[i].dest--;
     }
 
     kruskals(input, n, E);
+
+    delete[] input;
+    return 0;
 }
